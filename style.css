@@ -1,80 +1,206 @@
 :root {
-  --bg: #0f0f10;
-  --fg: #f4f4f5;
-  --accent: #5b8cff;
-  --muted: #9a9aa2;
+  --ink: #17171a;
+  --accent: #4b3f8f;
+  --accent-soft: #cfc9ec;
+  --cream: #f3f1ea;
+  --muted: #6b6a63;
+  --track: #e4e1d6;
 }
-
-* {
-  box-sizing: border-box;
-}
-
-body {
+* { box-sizing: border-box; }
+html, body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--bg);
-  color: var(--fg);
+  height: 100%;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Camera preview — small, tucked in a corner, not the focus of this layout */
+#webcam {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+  right: 1rem;
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid var(--track);
+  z-index: 1;
+  background: #000;
+}
+
+/* Status strip, top */
+#top-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 3;
   display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  align-items: center;
+  gap: 0.6rem;
+  padding: calc(env(safe-area-inset-top, 0px) + 0.85rem) 1rem 0.85rem;
+  background: linear-gradient(to bottom, rgba(243,241,234,0.95), rgba(243,241,234,0));
 }
-
-header {
-  padding: 2rem 1.5rem 1rem;
-  text-align: center;
+#dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--track);
+  flex-shrink: 0;
 }
-
-header h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.75rem;
+#dot.live { background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  #dot.live { animation: pulse 1.6s ease-in-out infinite; }
 }
-
-header p {
-  color: var(--muted);
-  margin: 0;
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.3); }
 }
-
-main {
+#status-text {
   flex: 1;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.chip-btn {
+  background: transparent;
+  border: 1px solid var(--muted);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.chip-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Start screen, shown before the model/camera are running */
+#start-screen {
+  position: fixed; inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(23,23,26,0.45);
+}
+#start-screen[hidden] { display: none; }
+#start-card {
+  background: var(--cream);
+  color: var(--ink);
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+#start-card h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+#start-card p { margin: 0 0 1.25rem; color: var(--muted); font-size: 1rem; }
+#start-btn {
+  width: 100%;
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 1rem;
+  border: none;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+#start-btn:disabled { opacity: 0.6; cursor: default; }
+#start-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+#start-error {
+  margin: 0.9rem 0 0;
+  min-height: 1.2em;
+  color: #a3312c;
+  font-size: 0.9rem;
+}
+
+/* Main stage — the ring is the whole point of this layout */
+#ring-stage {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
-  padding: 1rem;
-}
-
-#input-section {
-  position: relative;
-}
-
-video, canvas {
-  max-width: 100%;
-  border-radius: 12px;
-}
-
-#result-section {
-  min-height: 2rem;
-  font-size: 1.1rem;
+  padding: 6rem 1.5rem 2rem;
   text-align: center;
 }
 
-button {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+#ring-wrap {
+  position: relative;
+  width: min(72vw, 320px);
+  height: min(72vw, 320px);
+}
+#ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+#ring-track {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: 12;
+}
+#ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 12;
+  stroke-linecap: round;
+  stroke-dasharray: 552.9; /* 2 * PI * 88 */
+  stroke-dashoffset: 552.9;
+  transition: stroke-dashoffset 0.15s linear;
+}
+#ring-fill.confirmed { stroke: #2f8f5b; }
+
+#ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+#guess {
+  font-size: clamp(1.6rem, 7vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.1;
+  word-break: break-word;
+}
+
+#hint-text {
+  margin: 0;
+  min-height: 1.4em;
+  color: var(--muted);
   font-size: 1rem;
+}
+
+#confidence-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+#confidence {
+  font-size: 1rem;
+  color: var(--muted);
+}
+#repeat-btn {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
   cursor: pointer;
 }
+#repeat-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
-button:hover {
-  opacity: 0.9;
-}
-
-footer {
-  text-align: center;
-  padding: 1rem;
-  color: var(--muted);
-  font-size: 0.8rem;
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }
